@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates version="2.19" updateDate="2017-05-03" xmlns="http://www.fixprotocol.org/ns/template-definition" templateNs="http://www.fixprotocol.org/ns/templates/sample" ns="http://www.fixprotocol.org/ns/fix"> 
+    <template name="MarketOverview" id="1115">
+        <string name="MessageType" id="35"><constant value="UA1115"/></string>
+        <int32 name="DataTimestamp" id="10178"><copy/></int32>
+        <int32 name="DataStatus" id="10121" presence="optional"><default/></int32>
+        <string name="SecurityID" id="48" presence="optional"/>
+        <int32 name="AShareIndex" id="10001" presence="optional" decimalPlaces="3"><default/></int32>
+        <int32 name="BShareIndex" id="10002" presence="optional" decimalPlaces="3"><default/></int32>
+        <int32 name="SSEIndex" id="10005" presence="optional" decimalPlaces="3"><default/></int32>
+        <int32 name="OrigTime" id="42" presence="optional"><default/></int32>
+        <int32 name="OrigDate" id="10003" presence="optional"><default/></int32>
+        <string name="EndOfDayMarker" id="10004" presence="optional"><default/></string>
+    </template>
+	 <!--Snapshot-->
+	  <template id="4001" name="MDSnapshotFullRefresh_4001">
+	    <typeRef name="MDSnapshotFullRefresh" />
+	    <string id="1500" name="MDStreamID">
+	      <copy />
+	    </string>
+	    <string id="48" name="SecurityID">
+	      <tail />
+	    </string>
+	    <byteVector id="55" name="Symbol" presence="optional">
+	      <default />
+	    </byteVector>
+	    <uInt64 id="8503" name="NumTrades" presence="optional">
+	      <delta />
+	    </uInt64>
+	    <uInt64 id="1020" name="TradeVolume" presence="optional">
+	      <delta />
+	    </uInt64>
+	    <decimal id="8504" name="TotalValueTraded" presence="optional">
+	      <delta />
+	    </decimal>
+	    <decimal id="140" name="PrevClosePx" presence="optional">
+	      <delta />
+	    </decimal>
+	    <decimal id="734" name="PrevSetPx" presence="optional">
+	      <delta />
+	    </decimal>
+	    <uInt64 id="8506" name="TotalLongPosition" presence="optional">
+	      <delta />
+	    </uInt64>
+	    <sequence name="MDFullGrp">
+	      <length id="268" name="NoMDEntries">
+	        <copy />
+	      </length>
+	      <string id="269" name="MDEntryType">
+	      </string>
+	      <decimal id="270" name="MDEntryPx" presence="optional">
+	        <delta />
+	      </decimal>
+	      <uInt64 id="271" name="MDEntrySize" presence="optional">
+	        <delta />
+	      </uInt64>
+	      <string id="273" name="MDEntryTime" presence="optional">
+	      	<tail />
+	      </string>
+	      <uInt32 id="290" name="MDEntryPositionNo" presence="optional">
+	      </uInt32>
+	    </sequence>
+	    <string id="8538" name="TradingPhaseCode" presence="optional">
+	      <copy />
+	    </string>
+	  </template>
+</templates>

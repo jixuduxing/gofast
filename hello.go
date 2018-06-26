@@ -3,8 +3,8 @@ package main
 
 import (
 	"fmt"
-
 	"io/ioutil"
+	"time"
 
 	"./decoder"
 	"./template"
@@ -44,6 +44,8 @@ func main() {
 	//	mset := template.Msgset{}
 	//	template.ParseTemplate("C:/Users/gao/PycharmProjects/test/shstep/template.xml")
 	//	mset.ParseTemplate("test.xml")
-
+	begintime := time.Now()
 	teststep("E:/tmp/shrecord_2018-05-2293845")
+	endtime := time.Now()
+	fmt.Println(begintime, endtime)
 }
