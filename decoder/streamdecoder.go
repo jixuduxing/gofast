@@ -102,7 +102,7 @@ func (self *streamdecoder) readdecimal_optional() (int, int64, int) {
 	}
 	mantissa, _ := self.readint64()
 
-	return exponent, mantissa, -1
+	return exponent, mantissa, 1
 }
 func (self *streamdecoder) readuint_optional() (uint, int) {
 	if self.Pos < len(self.data) {

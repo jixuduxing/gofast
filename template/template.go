@@ -2,7 +2,7 @@
 package template
 
 import (
-	"bytes"
+	//	"bytes"
 	"encoding/xml"
 	"fmt"
 	"io/ioutil"
@@ -163,7 +163,7 @@ func (self *Field) parsesequence(fld tempfield) bool {
 }
 
 func (self *Field) parseField(fld tempfield) bool {
-	fmt.Println(fld.XMLName.Local, fld.Id, fld.Name, fld.Presence)
+	//	fmt.Println(fld.XMLName.Local, fld.Id, fld.Name, fld.Presence)
 	self.Datatype = toitemtype(strings.ToLower(fld.XMLName.Local))
 	if self.Datatype == Type_else {
 		fmt.Print("err")
@@ -228,10 +228,10 @@ func (self *Msgset) ParseTemplate(filename string) bool {
 		fmt.Println("xml.Unmarshal fail")
 		return false
 	}
-	fmt.Println(result)
+	//	fmt.Println(result)
 
 	self.Msgitems = make(map[int]Message)
-	for k, tem := range result.Templetes {
+	for _, tem := range result.Templetes {
 		//		fmt.Println(k, tem.XMLName.Local, tem.Name, tem.Id)
 		msg := Message{Msgid: tem.Id, Msgname: tem.Name}
 		for _, fld := range tem.Fields {
