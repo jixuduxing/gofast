@@ -83,8 +83,12 @@ func (sel Stepdecoder) Decodedata(data []byte) int {
 		if id == BodyLengthID {
 			bodylen, _ := strconv.Atoi(value)
 			fmt.Println(id, "=", value)
-			sel.decodebody(data[pos : pos+bodylen])
-			pos += bodylen
+			if pos+bodylen < len(data) {
+				sel.decodebody(data[pos : pos+bodylen])
+				pos += bodylen
+			} else {
+				return 0
+			}
 		} else if id == "10" {
 			return pos
 		}

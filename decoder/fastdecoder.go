@@ -11,7 +11,7 @@ import (
 )
 
 type fastdecoder struct {
-	curmsgid int
+	curmsgid uint
 	msgs     template.Msgset
 	pmap     []byte
 	seq      int
@@ -144,7 +144,7 @@ func (sel *fastdecoder) readsequence(fieldseq *template.Field, decod *streamdeco
 }
 
 func (sel *fastdecoder) decodermsg(decord *streamdecoder) bool {
-	// fmt.Println("msgid = ", sel.curmsgid)
+	fmt.Println("msgid = ", sel.curmsgid)
 	curmessage, bfind := sel.msgs.Msgitems[sel.curmsgid]
 	if !bfind {
 		fmt.Println("data can not parse,unknown msgid", sel.curmsgid)
@@ -215,7 +215,7 @@ func (sel *fastdecoder) decodedata(buff []byte) bool {
 		generatepmapbits(sel.pmap)
 
 		if ispresent(0, sel.pmap) {
-			msgid, _, flag := decod.readint()
+			msgid, _, flag := decod.readuint()
 			if !flag {
 				return false
 			}
