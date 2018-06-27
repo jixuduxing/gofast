@@ -146,74 +146,74 @@ func parseElement(token xml.Token) bool {
 	return true
 }
 
-func (self *Field) parsesequence(fld tempfield) bool {
+func (sel *Field) parsesequence(fld tempfield) bool {
 	for _, child := range fld.Fields {
 		fiech := Field{Name: child.Name, Id: child.Id, Option: false, Op: Op_no}
 		fiech.parseField(child)
-		if len(self.Items) == 0 {
+		if len(sel.Items) == 0 {
 			if fiech.Datatype == Type_length {
-				self.Seqlen_item = &fiech
+				sel.Seqlen_item = &fiech
 				continue
 			}
 		}
-		fiech.Seq = len(self.Items)
-		self.Items = append(self.Items, fiech)
+		fiech.Seq = len(sel.Items)
+		sel.Items = append(sel.Items, fiech)
 	}
 	return true
 }
 
-func (self *Field) parseField(fld tempfield) bool {
+func (sel *Field) parseField(fld tempfield) bool {
 	//	fmt.Println(fld.XMLName.Local, fld.Id, fld.Name, fld.Presence)
-	self.Datatype = toitemtype(strings.ToLower(fld.XMLName.Local))
-	if self.Datatype == Type_else {
+	sel.Datatype = toitemtype(strings.ToLower(fld.XMLName.Local))
+	if sel.Datatype == Type_else {
 		fmt.Print("err")
 		return false
-	} else if self.Datatype == Type_typeRef {
+	} else if sel.Datatype == Type_typeRef {
 		return false
 	}
 	if fld.Presence == "optional" {
-		self.Option = true
+		sel.Option = true
 	}
-	if self.Datatype == Type_sequence {
-		return self.parsesequence(fld)
+	if sel.Datatype == Type_sequence {
+		return sel.parsesequence(fld)
 	}
 
 	if len(fld.Conscontent.XMLName.Local) > 0 {
-		self.Op = Op_constant
-		self.Prevalue = fld.Conscontent.Value
+		sel.Op = Op_constant
+		sel.Prevalue = fld.Conscontent.Value
 	} else if len(fld.Copycontent.XMLName.Local) > 0 {
-		self.Op = Op_copy
-		self.Prevalue = fld.Copycontent.Value
+		sel.Op = Op_copy
+		sel.Prevalue = fld.Copycontent.Value
 	} else if len(fld.Defaultcontent.XMLName.Local) > 0 {
-		self.Op = Op_default
-		self.Prevalue = fld.Defaultcontent.Value
+		sel.Op = Op_default
+		sel.Prevalue = fld.Defaultcontent.Value
 	} else if len(fld.Incrementcontent.XMLName.Local) > 0 {
-		self.Op = Op_increment
-		self.Prevalue = fld.Incrementcontent.Value
+		sel.Op = Op_increment
+		sel.Prevalue = fld.Incrementcontent.Value
 	} else if len(fld.Deltacontent.XMLName.Local) > 0 {
-		self.Op = Op_delta
-		self.Prevalue = fld.Deltacontent.Value
+		sel.Op = Op_delta
+		sel.Prevalue = fld.Deltacontent.Value
 	} else if len(fld.Tailcontent.XMLName.Local) > 0 {
-		self.Op = Op_tail
-		self.Prevalue = fld.Tailcontent.Value
+		sel.Op = Op_tail
+		sel.Prevalue = fld.Tailcontent.Value
 	}
 	//	field.op = tooptype(fld.)
 	//	fmt.Println("add")
 	return true
 }
 
-func (self Field) Needplace() bool {
-	if self.Op == Op_constant {
-		return self.Option
-	} else if self.Op == Op_delta {
+func (sel Field) Needplace() bool {
+	if sel.Op == Op_constant {
+		return sel.Option
+	} else if sel.Op == Op_delta {
 		return false
-	} else if self.Op == Op_no {
+	} else if sel.Op == Op_no {
 		return false
 	} else {
 		return true
 	}
 }
-func (self *Msgset) ParseTemplate(filename string) bool {
+func (sel *Msgset) ParseTemplate(filename string) bool {
 	fmt.Println("ParseTemplate begin!")
 
 	xmlcontent, err := ioutil.ReadFile(filename)
@@ -230,7 +230,7 @@ func (self *Msgset) ParseTemplate(filename string) bool {
 	}
 	//	fmt.Println(result)
 
-	self.Msgitems = make(map[int]Message)
+	sel.Msgitems = make(map[int]Message)
 	for _, tem := range result.Templetes {
 		//		fmt.Println(k, tem.XMLName.Local, tem.Name, tem.Id)
 		msg := Message{Msgid: tem.Id, Msgname: tem.Name}
@@ -241,7 +241,7 @@ func (self *Msgset) ParseTemplate(filename string) bool {
 			fie.Seq = len(msg.Fields)
 			msg.Fields = append(msg.Fields, fie)
 		}
-		self.Msgitems[tem.Id] = msg
+		sel.Msgitems[tem.Id] = msg
 	}
 	fmt.Println("ParseTemplate end!")
 	return true
