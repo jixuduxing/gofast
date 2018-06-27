@@ -1,9 +1,9 @@
 //streamdecoder
+
 package decoder
 
 import (
 	"fmt"
-	"os"
 )
 
 const (
@@ -17,36 +17,37 @@ type streamdecoder struct {
 	Pos  int
 }
 
-func (self streamdecoder) datanoprocess() int {
-	return len(self.data) - self.Pos
+func (sel streamdecoder) datanoprocess() int {
+	return len(sel.data) - sel.Pos
 }
 
-func (self *streamdecoder) readpmap() []byte {
-	beginpos := self.Pos
+func (sel *streamdecoder) readpmap() ([]byte, bool) {
+	beginpos := sel.Pos
 	for i := 0; i < 100; i++ {
-		if self.Pos < len(self.data) {
-			if self.data[self.Pos]&stopbit > 0 {
-				self.Pos += 1
-				//				fmt.Println("readpmap self.Pos:", self.Pos)
-				return self.data[beginpos:self.Pos]
+		if sel.Pos < len(sel.data) {
+			if sel.data[sel.Pos]&stopbit > 0 {
+				sel.Pos++
+				//				fmt.Println("readpmap sel.Pos:", sel.Pos)
+				return sel.data[beginpos:sel.Pos], true
 			}
-			self.Pos += 1
+			sel.Pos++
 		} else {
 			fmt.Println("readpmap buffer end")
-			os.Exit(0)
+			// os.Exit(0)
+			return []byte{}, false
 		}
 	}
 	fmt.Println("readpmap buffer end  2")
-	return []byte{}
+	return []byte{}, false
 }
 
-func (self *streamdecoder) readint() (int, int) {
+func (sel *streamdecoder) readint() (int, int, bool) {
 	var rint int
 	var firstch byte
 	rint = 0
 	for i := 0; i < 5; i++ {
-		if self.Pos < len(self.data) {
-			ch := self.data[self.Pos]
+		if sel.Pos < len(sel.data) {
+			ch := sel.data[sel.Pos]
 			if i == 0 {
 				firstch = ch
 				if firstch&signbit > 0 {
@@ -56,243 +57,262 @@ func (self *streamdecoder) readint() (int, int) {
 			//lue
 			rint <<= 7
 			rint |= int(ch & databits)
-			self.Pos += 1
+			sel.Pos++
 			if ch&stopbit > 0 {
-				return rint, i
+				return rint, i, true
 			}
 		}
 	}
-	return 0, -1
+	return 0, 0, false
 }
 
-func (self *streamdecoder) readint8() (int8, int) {
+func (sel *streamdecoder) readint8() (int8, int, bool) {
 	var rint int8
 	rint = 0
 	var firstch byte
 	for i := 0; i < 2; i++ {
-		if self.Pos < len(self.data) {
-			ch := self.data[self.Pos]
+		if sel.Pos < len(sel.data) {
+			ch := sel.data[sel.Pos]
 			if i == 0 {
-				firstch = self.data[self.Pos]
+				firstch = sel.data[sel.Pos]
 				if firstch&signbit > 0 {
 					rint = -1
 				}
 			}
 			//lue
 			rint <<= 7
-			rint |= int8(self.data[self.Pos] & databits)
-			self.Pos += 1
+			rint |= int8(sel.data[sel.Pos] & databits)
+			sel.Pos++
 			if ch&stopbit > 0 {
-				return rint, i
+				return rint, i, true
 			}
 		}
 	}
-	return 0, -1
+	return 0, 0, false
 }
 
-func (self *streamdecoder) readdecimal() (int, int64, int) {
-	exponent, i1 := self.readint()
-	mantissa, i2 := self.readint64()
-	return exponent, mantissa, i1 + i2
-}
-func (self *streamdecoder) readdecimal_optional() (int, int64, int) {
-	exponent, flag1 := self.readint_optional()
-	if flag1 == -1 {
-		return 0, 0, -1
+func (sel *streamdecoder) readdecimal() (int64, int, bool) {
+	exponent, i1, flag1 := sel.readint()
+	if !flag1 {
+		return 0, i1, false
 	}
-	mantissa, _ := self.readint64()
-
-	return exponent, mantissa, 1
+	mantissa, i2, flag2 := sel.readint64()
+	if !flag2 {
+		return 0, i2, false
+	}
+	return mantissa, exponent, true
 }
-func (self *streamdecoder) readuint_optional() (uint, int) {
-	if self.Pos < len(self.data) {
-		ch := self.data[self.Pos]
+func (sel *streamdecoder) readdecimalOptional() (int64, int, bool) {
+	exponent, i, flag1 := sel.readintOptional()
+	if !flag1 {
+		return 0, i, false
+	}
+	mantissa, _, flag2 := sel.readint64()
+	if !flag2 {
+		return 0, 0, false
+	}
+	return mantissa, exponent, true
+}
+func (sel *streamdecoder) readuintOptional() (uint, int, bool) {
+	if sel.Pos < len(sel.data) {
+		ch := sel.data[sel.Pos]
 		if ch == stopbit {
-			self.Pos += 1
-			return 0, -1 // False means NULL
+			sel.Pos++
+			return 0, 0, true // False means NULL
 		}
 	} else {
-		return 0, -1
+		return 0, 0, false
 	}
-	rint, _ := self.readuint()
+	rint, _, flag := sel.readuint()
+	if !flag {
+		return rint, -1, false
+	}
 	if rint > 0 {
-		rint -= 1
+		rint--
 	}
-	return rint, 0
+	return rint, 0, true
 }
-func (self *streamdecoder) readuint64_optional() (uint64, int) {
-	if self.Pos < len(self.data) {
-		ch := self.data[self.Pos]
+func (sel *streamdecoder) readuint64Optional() (uint64, int, bool) {
+	if sel.Pos < len(sel.data) {
+		ch := sel.data[sel.Pos]
 		if ch == stopbit {
-			self.Pos += 1
-			return 0, -1 // False means NULL
+			sel.Pos++
+			return 0, 0, true // False means NULL
 		}
 	} else {
-		return 0, -1
+		return 0, 0, false
 	}
-	rint, _ := self.readuint64()
+	rint, _, flag := sel.readuint64()
+	if !flag {
+		return rint, -1, false
+	}
 	if rint > 0 {
-		rint -= 1
+		rint--
 	}
-	return rint, 0
+	return rint, 0, true
 }
-func (self *streamdecoder) readint_optional() (int, int) {
-	if self.Pos < len(self.data) {
-		ch := self.data[self.Pos]
+func (sel *streamdecoder) readintOptional() (int, int, bool) {
+	if sel.Pos < len(sel.data) {
+		ch := sel.data[sel.Pos]
 		if ch == stopbit {
-			self.Pos += 1
-			return 0, -1 // False means NULL
+			sel.Pos++
+			return 0, -1, true // False means NULL
 		}
 	} else {
-		return 0, -1
+		return 0, -1, false
 	}
-	rint, _ := self.readint()
+	rint, _, flag := sel.readint()
+	if !flag {
+		return rint, -1, false
+	}
 	if rint > 0 {
-		rint -= 1
+		rint--
 	}
-	return rint, 0
+	return rint, 0, true
 }
-func (self *streamdecoder) readint64_optional() (int64, int) {
-	if self.Pos < len(self.data) {
-		ch := self.data[self.Pos]
+func (sel *streamdecoder) readint64Optional() (int64, int, bool) {
+	if sel.Pos < len(sel.data) {
+		ch := sel.data[sel.Pos]
 		if ch == stopbit {
-			self.Pos += 1
-			return 0, -1 // False means NULL
+			sel.Pos++
+			return 0, -1, true // False means NULL
 		}
 	} else {
-		return 0, -1
+		return 0, -1, false
 	}
-	rint, _ := self.readint64()
+	rint, _, flag := sel.readint64()
+	if !flag {
+		return rint, 0, false
+	}
 	if rint > 0 {
-		rint -= 1
+		rint--
 	}
-	return rint, 0
+	return rint, 0, true
 }
-func (self *streamdecoder) readuint() (uint, int) {
+func (sel *streamdecoder) readuint() (uint, int, bool) {
 	var rint uint
 	rint = 0
 	//	var firstch byte
 	for i := 0; i < 5; i++ {
-		if self.Pos < len(self.data) {
-			ch := self.data[self.Pos]
+		if sel.Pos < len(sel.data) {
+			ch := sel.data[sel.Pos]
 			//			if i == 0 {
-			//				firstch = self.data[self.pos]
+			//				firstch = sel.data[sel.pos]
 
 			//			}
 			//lue
 			rint <<= 7
-			rint |= uint(self.data[self.Pos] & databits)
-			self.Pos += 1
+			rint |= uint(sel.data[sel.Pos] & databits)
+			sel.Pos++
 			if ch&stopbit > 0 {
-				return rint, i
+				return rint, i, true
 			}
 		}
 	}
-	return 0, -1
+	return 0, -1, false
 }
-func (self *streamdecoder) readuint64() (uint64, int) {
+func (sel *streamdecoder) readuint64() (uint64, int, bool) {
 	var rint uint64
 	rint = 0
 	//	var firstch byte
 	for i := 0; i < 10; i++ {
-		if self.Pos < len(self.data) {
-			ch := self.data[self.Pos]
+		if sel.Pos < len(sel.data) {
+			ch := sel.data[sel.Pos]
 			//			if i == 0 {
-			//				firstch = self.data[self.pos]
+			//				firstch = sel.data[sel.pos]
 
 			//			}
 			//lue
 			rint <<= 7
-			rint |= uint64(self.data[self.Pos] & databits)
-			self.Pos += 1
+			rint |= uint64(sel.data[sel.Pos] & databits)
+			sel.Pos++
 			if ch&stopbit > 0 {
-				return rint, i
+				return rint, i, true
 			}
 		}
 	}
-	return 0, -1
+	return 0, -1, false
 }
-func (self *streamdecoder) readint64() (int64, int) {
+func (sel *streamdecoder) readint64() (int64, int, bool) {
 	var rint int64
 	rint = 0
 	var firstch byte
 	for i := 0; i < 10; i++ {
-		if self.Pos < len(self.data) {
-			ch := self.data[self.Pos]
+		if sel.Pos < len(sel.data) {
+			ch := sel.data[sel.Pos]
 			if i == 0 {
-				firstch = self.data[self.Pos]
+				firstch = sel.data[sel.Pos]
 				if firstch&signbit > 0 {
 					rint = -1
 				}
 			}
 			//lue
 			rint <<= 7
-			rint |= int64(self.data[self.Pos] & databits)
-			self.Pos += 1
+			rint |= int64(sel.data[sel.Pos] & databits)
+			sel.Pos++
 			if ch&stopbit > 0 {
-				return rint, i
+				return rint, i, true
 			}
 		}
 	}
-	return 0, -1
+	return 0, -1, false
 }
-func (self *streamdecoder) read_string_acii() (string, int) {
-	beginpos := self.Pos
+func (sel *streamdecoder) readStringAcii() (string, int, bool) {
+	beginpos := sel.Pos
 	i := 0
 	for true {
-		if self.Pos < len(self.data) {
-			ch := self.data[self.Pos]
-			self.Pos += 1
+		if sel.Pos < len(sel.data) {
+			ch := sel.data[sel.Pos]
+			sel.Pos++
 			if ch&stopbit > 0 {
-				return string(append(self.data[beginpos:self.Pos-1], ch&databits)), i
+				return string(append(sel.data[beginpos:sel.Pos-1], ch&databits)), i, true
 			}
-			i += 1
+			i++
 		} else {
 			break
 		}
 	}
-	return "", -1
+	return "", 0, false
 }
-func (self *streamdecoder) read_string_acii_optional() (string, int) {
-	if self.Pos < len(self.data) {
-		ch := self.data[self.Pos]
+func (sel *streamdecoder) readAtringAciiOptional() (string, int, bool) {
+	if sel.Pos < len(sel.data) {
+		ch := sel.data[sel.Pos]
 		if ch == stopbit {
-			self.Pos += 1
-			return "", -1 //FC_NULL_VALUE
+			sel.Pos++
+			return "", 0, false //FC_NULL_VALUE
 		} else if ch == 0 {
-			self.Pos += 1
-			if self.Pos < len(self.data) {
-				ch = self.data[self.Pos]
+			sel.Pos++
+			if sel.Pos < len(sel.data) {
+				ch = sel.data[sel.Pos]
 				if ch == stopbit {
-					self.Pos += 1
-					return "", 0 // #FC_EMPTY_VALUE
-				} else {
-					self.Pos -= 1
+					sel.Pos++
+					return "", 0, true // #FC_EMPTY_VALUE
 				}
+				sel.Pos--
 			}
 		}
 	}
-	retstr, _ := self.read_string_acii()
-	return retstr, 0
+	retstr, i, flag := sel.readStringAcii()
+	return retstr, i, flag
 }
 
-func (self *streamdecoder) readbyteVector_optional() ([]byte, int) {
-	rlen, flag := self.readuint64_optional()
-	if flag == -1 {
-		return []byte{}, flag
+func (sel *streamdecoder) readbyteVectorOptional() ([]byte, int, bool) {
+	rlen, i, flag := sel.readuint64Optional()
+	if !flag || rlen == 0 {
+		return []byte{}, i, flag
 	}
 
-	rdata := self.data[self.Pos : self.Pos+int(rlen)]
-	self.Pos += int(rlen)
-	return rdata, 0
+	rdata := sel.data[sel.Pos : sel.Pos+int(rlen)]
+	sel.Pos += int(rlen)
+	return rdata, i + int(rlen), true
 }
 
-func (self *streamdecoder) readbyteVector() ([]byte, int) {
-	rlen, i := self.readuint64()
-	if rlen == 0 {
-		return []byte{}, i
+func (sel *streamdecoder) readbyteVector() ([]byte, int, bool) {
+	rlen, i, flag := sel.readuint64()
+	if !flag || rlen == 0 {
+		return []byte{}, i, flag
 	}
-	rdata := self.data[self.Pos : self.Pos+int(rlen)]
-	self.Pos += int(rlen)
-	return rdata, 0
+	rdata := sel.data[sel.Pos : sel.Pos+int(rlen)]
+	sel.Pos += int(rlen)
+	return rdata, i + int(rlen), true
 }

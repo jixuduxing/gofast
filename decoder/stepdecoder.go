@@ -1,27 +1,31 @@
-//stepdecoder
+//stepdecoder BalaBala
+
 package decoder
 
 import (
 	"fmt"
 	"strconv"
 
-	"../template"
+	"gofast/template"
 )
 
+//const BalaBala
 const (
-	RAWDATA_ID       = "96"
-	BODY_LENGTH_ID   = "9"
-	RAWDATALENGTH_ID = "95"
-	SOH              = '\x01'
+	RawDataID       = "96"
+	BodyLengthID    = "9"
+	RawDataLengthID = "95"
+	Soh             = '\x01'
 )
 
+//Stepdecoder  balabala
 type Stepdecoder struct {
 	//	curmsgid    int
 	Msgs template.Msgset
 	//	curtemplate []byte
 }
 
-func (self Stepdecoder) Decodedata(data []byte) int {
+//Decodedata  BalaBala
+func (sel Stepdecoder) Decodedata(data []byte) int {
 	if len(data) < 10 {
 		fmt.Println("len(data) < 10")
 		return 0
@@ -34,7 +38,7 @@ func (self Stepdecoder) Decodedata(data []byte) int {
 	bSOHfind := false
 	var findpos int
 	for i, v := range data[2:] {
-		if v == SOH {
+		if v == Soh {
 			bSOHfind = true
 			findpos = i
 			break
@@ -64,7 +68,7 @@ func (self Stepdecoder) Decodedata(data []byte) int {
 		pos += findpos + 1
 		bSOHfind = false
 		for i, v := range data[pos:] {
-			if v == SOH {
+			if v == Soh {
 				bSOHfind = true
 				findpos = i
 				break
@@ -76,10 +80,10 @@ func (self Stepdecoder) Decodedata(data []byte) int {
 		value = string(data[pos : pos+findpos])
 		pos += findpos + 1
 
-		if id == BODY_LENGTH_ID {
+		if id == BodyLengthID {
 			bodylen, _ := strconv.Atoi(value)
 			fmt.Println(id, "=", value)
-			self.decodebody(data[pos : pos+bodylen])
+			sel.decodebody(data[pos : pos+bodylen])
 			pos += bodylen
 		} else if id == "10" {
 			return pos
@@ -88,7 +92,7 @@ func (self Stepdecoder) Decodedata(data []byte) int {
 	return 0
 }
 
-func (self Stepdecoder) decodebody(data []byte) int {
+func (sel Stepdecoder) decodebody(data []byte) int {
 	//	fmt.Println(string(data))
 	if len(data) < 10 {
 		return -1
@@ -112,10 +116,10 @@ func (self Stepdecoder) decodebody(data []byte) int {
 		}
 		id := string(data[pos : pos+findpos])
 		pos += findpos + 1
-		if id != RAWDATA_ID {
+		if id != RawDataID {
 			SOHfind = false
 			for i, v := range data[pos:] {
-				if v == SOH {
+				if v == Soh {
 					SOHfind = true
 					findpos = i
 					break
@@ -126,24 +130,24 @@ func (self Stepdecoder) decodebody(data []byte) int {
 			}
 			value := string(data[pos : pos+findpos])
 			pos += findpos + 1
-			if id == RAWDATALENGTH_ID {
+			if id == RawDataLengthID {
 				rawdatasize, _ = strconv.Atoi(value)
 			}
 		} else {
 			if rawdatasize > 0 {
 				fmt.Println("fast fast fast fast fast fast fast fast ")
 				if string(data[pos:pos+2]) == "8=" {
-					self.Decodedata(data[pos : pos+rawdatasize])
+					sel.Decodedata(data[pos : pos+rawdatasize])
 					break
 				}
-				fastdecod := fastdecoder{msgs: self.Msgs}
+				fastdecod := fastdecoder{msgs: sel.Msgs}
 				fastdecod.decodedata(data[pos : pos+rawdatasize])
 				break
 
 			} else {
 				SOHfind = false
 				for i, v := range data[pos:] {
-					if v == SOH {
+					if v == Soh {
 						SOHfind = true
 						findpos = i
 					}

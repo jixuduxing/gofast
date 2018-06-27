@@ -1,12 +1,9 @@
 // decoder
+
 package decoder
 
-import (
-	"fmt"
-)
-
 func generatepmapbits(pmap []byte) {
-	fmt.Println("pmap", pmap)
+	// fmt.Println("pmap", pmap)
 	return
 }
 

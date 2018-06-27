@@ -1,12 +1,13 @@
 //fastdecoder
+
 package decoder
 
 import (
 	"fmt"
 	//	"os"
+	"gofast/template"
 	"strconv"
-
-	"../template"
+	// "../template"
 )
 
 type fastdecoder struct {
@@ -16,75 +17,92 @@ type fastdecoder struct {
 	seq      int
 }
 
-func read(field *template.Field, decod *streamdecoder, isoption bool) {
+func read(field *template.Field, decod *streamdecoder, isoption bool) (interface{}, bool) {
 	if field.Datatype == template.Type_int32 {
 		if isoption {
-			fmt.Println(decod.readint_optional())
-			return
+			// fmt.Println
+			ret, _, flag := decod.readintOptional()
+			return ret, flag
 		}
-		fmt.Println(decod.readint())
-		return
+		// fmt.Println
+		ret, _, flag := decod.readint()
+		return ret, flag
+
 	} else if field.Datatype == template.Type_uint32 {
 		if isoption {
-			fmt.Println(decod.readuint_optional())
-			return
+			// fmt.Println
+			ret, _, flag := decod.readuintOptional()
+			return ret, flag
 		}
-		fmt.Println(decod.readuint())
+		// fmt.Println
+		ret, _, flag := (decod.readuint())
+		return ret, flag
 	} else if field.Datatype == template.Type_length {
 		if isoption {
-			fmt.Println(decod.readuint_optional())
-			return
+			// fmt.Println
+			ret, _, flag := (decod.readuintOptional())
+			return ret, flag
 		}
-		fmt.Println(decod.readuint())
+		// fmt.Println
+		ret, _, flag := (decod.readuint())
+		return ret, flag
 	} else if field.Datatype == template.Type_uint64 {
 		if isoption {
-			fmt.Println(decod.readuint64_optional())
-			return
+			// fmt.Println
+			ret, _, flag := (decod.readuint64Optional())
+			return ret, flag
 		}
-		fmt.Println(decod.readuint64())
-		return
+		// fmt.Println
+		ret, _, flag := (decod.readuint64())
+		return ret, flag
 	} else if field.Datatype == template.Type_int64 {
 		if isoption {
-			fmt.Println(decod.readint64_optional())
-			return
+			// fmt.Println
+			ret, _, flag := (decod.readint64Optional())
+			return ret, flag
 		}
-		fmt.Println(decod.readint64())
-		return
+		// fmt.Println
+		ret, _, flag := (decod.readint64())
+		return ret, flag
 	} else if field.Datatype == template.Type_acsii {
 		if isoption {
-			fmt.Println(decod.read_string_acii_optional())
-			return
+			// fmt.Println
+			ret, _, flag := (decod.readAtringAciiOptional())
+			return ret, flag
 		}
-		fmt.Println(decod.read_string_acii())
-		return
+		// fmt.Println
+		ret, _, flag := (decod.readStringAcii())
+		return ret, flag
 	} else if field.Datatype == template.Type_decimal {
 		if isoption {
-			exponent, mantissa, flag := decod.readdecimal_optional()
-			fmt.Println(exponent, mantissa, flag)
-			return
+			exponent, mantissa, flag := decod.readdecimalOptional()
+			return "(" + string(exponent) + "," + string(mantissa) + ")", flag
+			// fmt.Println(exponent, mantissa, flag)
 		}
-		exponent, mantissa, i := decod.readdecimal()
-		fmt.Println(exponent, mantissa, i)
-		return
+		exponent, mantissa, flag := decod.readdecimal()
+		return "(" + string(exponent) + "," + string(mantissa) + ")", flag
+		// fmt.Println(exponent, mantissa, i)
 	} else if field.Datatype == template.Type_byteVector {
 		if isoption {
-			fmt.Println(decod.readbyteVector_optional())
-			return
+			ret, _, flag := (decod.readbyteVectorOptional())
+			return ret, flag
 		}
-		fmt.Println(decod.readbyteVector())
-		return
+
+		ret, _, flag := (decod.readbyteVector())
+		return ret, flag
+
 	}
-	return
+	return nil, false
 }
 
-func (self *fastdecoder) readsequence(fieldseq *template.Field, decod *streamdecoder) {
+func (sel *fastdecoder) readsequence(fieldseq *template.Field, decod *streamdecoder) bool {
 	if len(fieldseq.Items) == 0 {
 		fmt.Println(fieldseq.Name+" wrong", 0)
-		return
+		return false
 	}
 	sequencelen := 0
 	if fieldseq.Seqlen_item.Needplace() {
-		if !ispresent(self.seq, self.pmap) {
+		if !ispresent(sel.seq, sel.pmap) {
 			if fieldseq.Seqlen_item.Op == template.Op_copy {
 				sequencelen, _ = strconv.Atoi(fieldseq.Seqlen_item.Prevalue)
 			} else {
@@ -92,58 +110,75 @@ func (self *fastdecoder) readsequence(fieldseq *template.Field, decod *streamdec
 			}
 		} else {
 			tmpvalue := uint(0)
+			flag := false
 			if fieldseq.Seqlen_item.Option {
-				tmpvalue, _ = decod.readuint_optional()
+				tmpvalue, _, flag = decod.readuintOptional()
 			} else {
-				tmpvalue, _ = decod.readuint()
+				tmpvalue, _, flag = decod.readuint()
+			}
+			if !flag {
+				return false
 			}
 			sequencelen = int(tmpvalue)
-			//			self.read(fieldseq.Seqlen_item,decod, fieldseq.Seqlen_item.Option)
+			//			sel.read(fieldseq.Seqlen_item,decod, fieldseq.Seqlen_item.Option)
 		}
-		self.seq += 1
+		sel.seq++
 	} else {
 		tmpvalue := uint(0)
+		flag := false
 		if fieldseq.Seqlen_item.Option {
-			tmpvalue, _ = decod.readuint_optional()
+			tmpvalue, _, flag = decod.readuintOptional()
 		} else {
-			tmpvalue, _ = decod.readuint()
+			tmpvalue, _, flag = decod.readuint()
+		}
+		if !flag {
+			return false
 		}
 		sequencelen = int(tmpvalue)
-		//		sequencelen,_ =self.read(fieldseq.Seqlen_item,decod, fieldseq.Seqlen_item.Option)
+		//		sequencelen,_ =sel.read(fieldseq.Seqlen_item,decod, fieldseq.Seqlen_item.Option)
 	}
 	sequncedecod := sequencedecoder{}
 	fieldseq.Seqlen_item.Prevalue = strconv.Itoa(sequencelen)
-	fmt.Println("enter sequence", fieldseq.Name, sequencelen)
-	sequncedecod.decode(decod, sequencelen, fieldseq)
+	// fmt.Println("enter sequence", fieldseq.Name, sequencelen)
+	return sequncedecod.decode(decod, sequencelen, fieldseq)
 }
 
-func (self *fastdecoder) decodermsg(decord *streamdecoder) bool {
-	fmt.Println("msgid = ", self.curmsgid)
-	curmessage, bfind := self.msgs.Msgitems[self.curmsgid]
+func (sel *fastdecoder) decodermsg(decord *streamdecoder) bool {
+	// fmt.Println("msgid = ", sel.curmsgid)
+	curmessage, bfind := sel.msgs.Msgitems[sel.curmsgid]
 	if !bfind {
-		fmt.Println("data can not parse,unknown msgid", self.curmsgid)
+		fmt.Println("data can not parse,unknown msgid", sel.curmsgid)
 		return false
 	}
-	self.seq = 1
-	for idx, _ := range curmessage.Fields[1:] {
-		field := &curmessage.Fields[idx+1]
+	sel.seq = 1
+	for idx := range curmessage.Fields {
+		if idx == 0 {
+			continue
+		}
+		field := &curmessage.Fields[idx]
 		if field.Needplace() {
 			if field.Datatype == template.Type_else {
 				fmt.Println("decoderdata fail for field:1", "test", field.Id, field.Seq)
 
 				return false
 			}
-			if !ispresent(self.seq, self.pmap) {
-				fmt.Println("no seq|id:", self.seq, field.Id)
-				self.seq += 1
+			if !ispresent(sel.seq, sel.pmap) {
+				// fmt.Println("no seq|id:", sel.seq, field.Id)
+				sel.seq++
 				continue
 			}
-			self.seq += 1
-			//			fmt.Println("ID|seq:", field.Id, self.seq)
+			sel.seq++
+			//			fmt.Println("ID|seq:", field.Id, sel.seq)
 			if field.Datatype == template.Type_sequence {
-				self.readsequence(field, decord)
+				flag := sel.readsequence(field, decord)
+				if !flag {
+					return false
+				}
 			} else {
-				read(field, decord, field.Option)
+				_, flag := read(field, decord, field.Option)
+				if !flag {
+					return false
+				}
 			}
 		} else if field.Op == template.Op_no || field.Op == template.Op_delta {
 			if field.Datatype == template.Type_else {
@@ -152,9 +187,15 @@ func (self *fastdecoder) decodermsg(decord *streamdecoder) bool {
 			}
 			//			fmt.Println("data2 ID:", field.Id)
 			if field.Datatype == template.Type_sequence {
-				self.readsequence(field, decord)
+				flag := sel.readsequence(field, decord)
+				if !flag {
+					return false
+				}
 			} else {
-				read(field, decord, field.Option)
+				_, flag := read(field, decord, field.Option)
+				if !flag {
+					return false
+				}
 			}
 		}
 	}
@@ -162,21 +203,31 @@ func (self *fastdecoder) decodermsg(decord *streamdecoder) bool {
 	return true
 }
 
-func (self *fastdecoder) decodedata(buff []byte) bool {
+func (sel *fastdecoder) decodedata(buff []byte) bool {
 	decod := &streamdecoder{data: buff, Pos: 0}
+	flag := false
+	fastmsgcnt := 0
 	for decod.datanoprocess() > 0 {
-		self.pmap = decod.readpmap()
-		generatepmapbits(self.pmap)
-
-		if ispresent(0, self.pmap) {
-			msgid, _ := decod.readint()
-			self.curmsgid = msgid
-		} else {
-			fmt.Println("no msgid")
-		}
-		if !self.decodermsg(decod) {
+		sel.pmap, flag = decod.readpmap()
+		if !flag {
 			return false
 		}
+		generatepmapbits(sel.pmap)
+
+		if ispresent(0, sel.pmap) {
+			msgid, _, flag := decod.readint()
+			if !flag {
+				return false
+			}
+			sel.curmsgid = msgid
+		} else {
+			// fmt.Println("no msgid")
+		}
+		if !sel.decodermsg(decod) {
+			return false
+		}
+		fastmsgcnt++
 	}
+	fmt.Println("decodedata end", fastmsgcnt)
 	return true
 }
