@@ -1,4 +1,5 @@
 // enumtest
+
 package main
 
 //	"fmt"
@@ -15,8 +16,8 @@ const (
 	Terminated              // value --> 3
 )
 
-func (this State) String() string {
-	switch this {
+func (tthis State) String() string {
+	switch tthis {
 	case Running:
 		return "Running"
 	case Stopped:
@@ -28,7 +29,7 @@ func (this State) String() string {
 
 // 输出 state Running
 // 没有重载String函数的情况下则输出 state 0
-//func main() {
-//	state := Stopped
-//	fmt.Println("state", state)
-//}
+// func main() {
+// 	state := Stopped
+// 	fmt.Println("state", state)
+// }

@@ -33,7 +33,7 @@ func (sel *sequencedecoder) readsequence(fieldseq *template.Field, decod *stream
 			tmpvalue := uint(0)
 			flag := false
 			if fieldseq.Seqlen_item.Option {
-				tmpvalue, _, flag = decod.readuintOptional()
+				tmpvalue, _, flag, _ = decod.readuintOptional()
 			} else {
 				tmpvalue, _, flag = decod.readuint()
 			}
@@ -48,7 +48,7 @@ func (sel *sequencedecoder) readsequence(fieldseq *template.Field, decod *stream
 		tmpvalue := uint(0)
 		flag := false
 		if fieldseq.Seqlen_item.Option {
-			tmpvalue, _, flag = decod.readuintOptional()
+			tmpvalue, _, flag, _ = decod.readuintOptional()
 		} else {
 			tmpvalue, _, flag = decod.readuint()
 		}
@@ -92,9 +92,16 @@ func (sel *sequencedecoder) decode(decod *streamdecoder, sequencelen int, fields
 				sel.seq++
 				//				fmt.Println("id|seq", field.Id, sel.seq)
 				if field.Datatype == template.Type_sequence {
-					sel.readsequence(field, decod)
+					flag := sel.readsequence(field, decod)
+					if !flag {
+						return false
+					}
 				} else {
-					read(field, decod, field.Option)
+					_, flag := read(field, decod, field.Option)
+					if !flag {
+						return false
+					}
+					// fmt.Println("Id3|value:", field.Id, value)
 				}
 
 			} else if field.Op == template.Op_no || field.Op == template.Op_delta {
@@ -113,11 +120,12 @@ func (sel *sequencedecoder) decode(decod *streamdecoder, sequencelen int, fields
 					if !flag {
 						return false
 					}
+					// fmt.Println("Id4|value:", field.Id, value)
 				}
 
 			}
 		}
 	}
-	return true
 	// fmt.Println("leave sequence ", fieldseq.Name)
+	return true
 }

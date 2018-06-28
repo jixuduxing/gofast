@@ -1,40 +1,69 @@
 // hello
+
 package main
 
 import (
 	"fmt"
-	"io/ioutil"
+	"gofast/decoder"
+	"gofast/template"
+	"os"
 	"time"
-
-	"./decoder"
-	"./template"
+	// "/decoder"
+	// "./template"
 )
 
 func teststep(filename string) bool {
-	content, err := ioutil.ReadFile(filename)
+	fi, err := os.Open(filename)
 	if err != nil {
-		fmt.Println("Error opening file: ", err)
-		return false
+		panic(err)
 	}
+	defer fi.Close()
+
+	// content, err := ioutil.ReadFile(filename)
+	// if err != nil {
+	// 	fmt.Println("Error opening file: ", err)
+	// 	return false
+	// }
 	mset := template.Msgset{}
-	mset.ParseTemplate("C:/Users/gao/PycharmProjects/test/shstep/template.xml")
+	mset.ParseTemplate("template.xml")
 	//	mset.ParseTemplate("test.xml")
-
-	fmt.Println("content len:", len(content))
-	decd := decoder.Stepdecoder{Msgs: mset}
-	pos := 0
 	cnt := 0
-	for i := 0; i < 400000; i++ {
-		iret := decd.Decodedata(content[pos:])
-		if iret < 1 {
-			fmt.Println("end!")
-			break
+	decd := decoder.Stepdecoder{Msgs: mset}
+	bufflen := 10 * 1024
+	rcontent := make([]byte, bufflen)
+	content := []byte{}
+	for true {
+		nlen, err := fi.Read(rcontent)
+		if err != nil {
+			fmt.Println("Read error!")
+			return false
 		}
-		cnt += 1
-		fmt.Println("parsed len=", iret, pos, cnt)
-		pos += iret
+		fmt.Println("content len|rem:", nlen, len(content))
+		if nlen == bufflen {
+			content = append(content, rcontent...)
+		} else {
+			content = append(content, rcontent[:nlen]...)
+		}
+		// content := append(bytesremain, rcontent[:nlen])
+		pos := 0
+		for true {
+			iret := decd.Decodedata(content[pos:])
+			if iret == -1 {
+				fmt.Println("wrong buff !")
+				return false
+			}
+			if iret < 1 {
+				// fmt.Println("end!")
+				content = content[pos:]
+				break
+			}
+			cnt++
+			fmt.Println("parsed iret|pos|cnt", iret, pos, cnt)
+			pos += iret
 
+		}
 	}
+	fmt.Println("end!")
 	return true
 }
 
@@ -45,7 +74,7 @@ func main() {
 	//	template.ParseTemplate("C:/Users/gao/PycharmProjects/test/shstep/template.xml")
 	//	mset.ParseTemplate("test.xml")
 	begintime := time.Now()
-	teststep("E:/tmp/shrecord_2018-05-2293845")
+	teststep("fastdata")
 	endtime := time.Now()
 	fmt.Println(begintime, endtime)
 }

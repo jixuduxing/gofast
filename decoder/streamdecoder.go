@@ -78,6 +78,14 @@ func (sel *streamdecoder) readint8() (int8, int, bool) {
 				if firstch&signbit > 0 {
 					rint = -1
 				}
+			} else if i == 1 {
+				if firstch&signbit > 0 {
+					if (firstch&databits)>>4 != 1 {
+						return 0, 0, false
+					}
+				} else if (firstch&databits)>>4 != 0 {
+					return 0, 0, false
+				}
 			}
 			//lue
 			rint <<= 7
@@ -102,92 +110,93 @@ func (sel *streamdecoder) readdecimal() (int64, int, bool) {
 	}
 	return mantissa, exponent, true
 }
-func (sel *streamdecoder) readdecimalOptional() (int64, int, bool) {
-	exponent, i, flag1 := sel.readintOptional()
-	if !flag1 {
-		return 0, i, false
+func (sel *streamdecoder) readdecimalOptional() (int64, int, bool, bool) {
+	exponent, i, flag1, flag2 := sel.readintOptional()
+	if !flag1 || !flag2 {
+		return 0, i, flag1, flag2
 	}
+
 	mantissa, _, flag2 := sel.readint64()
 	if !flag2 {
-		return 0, 0, false
+		return 0, 0, false, false
 	}
-	return mantissa, exponent, true
+	return mantissa, exponent, true, true
 }
-func (sel *streamdecoder) readuintOptional() (uint, int, bool) {
+func (sel *streamdecoder) readuintOptional() (uint, int, bool, bool) {
 	if sel.Pos < len(sel.data) {
 		ch := sel.data[sel.Pos]
 		if ch == stopbit {
 			sel.Pos++
-			return 0, 0, true // False means NULL
+			return 0, 0, true, false
 		}
 	} else {
-		return 0, 0, false
+		return 0, 0, false, false
 	}
 	rint, _, flag := sel.readuint()
 	if !flag {
-		return rint, -1, false
+		return rint, -1, false, false
 	}
 	if rint > 0 {
 		rint--
 	}
-	return rint, 0, true
+	return rint, 0, true, true
 }
-func (sel *streamdecoder) readuint64Optional() (uint64, int, bool) {
+func (sel *streamdecoder) readuint64Optional() (uint64, int, bool, bool) {
 	if sel.Pos < len(sel.data) {
 		ch := sel.data[sel.Pos]
 		if ch == stopbit {
 			sel.Pos++
-			return 0, 0, true // False means NULL
+			return 0, 0, true, false // False means NULL
 		}
 	} else {
-		return 0, 0, false
+		return 0, 0, false, false
 	}
 	rint, _, flag := sel.readuint64()
 	if !flag {
-		return rint, -1, false
+		return rint, -1, false, false
 	}
 	if rint > 0 {
 		rint--
 	}
-	return rint, 0, true
+	return rint, 0, true, true
 }
-func (sel *streamdecoder) readintOptional() (int, int, bool) {
+func (sel *streamdecoder) readintOptional() (int, int, bool, bool) {
 	if sel.Pos < len(sel.data) {
 		ch := sel.data[sel.Pos]
 		if ch == stopbit {
 			sel.Pos++
-			return 0, -1, true // False means NULL
+			return 0, -1, true, false // False means NULL
 		}
 	} else {
-		return 0, -1, false
+		return 0, -1, false, false
 	}
 	rint, _, flag := sel.readint()
 	if !flag {
-		return rint, -1, false
+		return rint, -1, false, false
 	}
 	if rint > 0 {
 		rint--
 	}
-	return rint, 0, true
+	return rint, 0, true, true
 }
-func (sel *streamdecoder) readint64Optional() (int64, int, bool) {
+func (sel *streamdecoder) readint64Optional() (int64, int, bool, bool) {
 	if sel.Pos < len(sel.data) {
 		ch := sel.data[sel.Pos]
 		if ch == stopbit {
 			sel.Pos++
-			return 0, -1, true // False means NULL
+			return 0, -1, true, false // False means NULL
 		}
 	} else {
-		return 0, -1, false
+		return 0, -1, false, false
 	}
 	rint, _, flag := sel.readint64()
 	if !flag {
-		return rint, 0, false
+		return rint, 0, false, false
 	}
 	if rint > 0 {
 		rint--
 	}
-	return rint, 0, true
+	return rint, 0, true, true
 }
 func (sel *streamdecoder) readuint() (uint, int, bool) {
 	var rint uint
@@ -207,6 +216,8 @@ func (sel *streamdecoder) readuint() (uint, int, bool) {
 			if ch&stopbit > 0 {
 				return rint, i, true
 			}
+		} else {
+			return 0, 0, false
 		}
 	}
 	return 0, -1, false
@@ -229,6 +240,8 @@ func (sel *streamdecoder) readuint64() (uint64, int, bool) {
 			if ch&stopbit > 0 {
 				return rint, i, true
 			}
+		} else {
+			return 0, 0, false
 		}
 	}
 	return 0, -1, false
@@ -253,6 +266,8 @@ func (sel *streamdecoder) readint64() (int64, int, bool) {
 			if ch&stopbit > 0 {
 				return rint, i, true
 			}
+		} else {
+			return 0, 0, false
 		}
 	}
 	return 0, -1, false
@@ -269,42 +284,44 @@ func (sel *streamdecoder) readStringAcii() (string, int, bool) {
 			}
 			i++
 		} else {
-			break
+			return "nil", 0, false
 		}
 	}
 	return "", 0, false
 }
-func (sel *streamdecoder) readAtringAciiOptional() (string, int, bool) {
+func (sel *streamdecoder) readAtringAciiOptional() (string, int, bool, bool) {
 	if sel.Pos < len(sel.data) {
 		ch := sel.data[sel.Pos]
 		if ch == stopbit {
 			sel.Pos++
-			return "", 0, false //FC_NULL_VALUE
+			return "", 0, false, false //FC_NULL_VALUE
 		} else if ch == 0 {
 			sel.Pos++
 			if sel.Pos < len(sel.data) {
 				ch = sel.data[sel.Pos]
 				if ch == stopbit {
 					sel.Pos++
-					return "", 0, true // #FC_EMPTY_VALUE
+					return "", 0, true, true // #FC_EMPTY_VALUE
 				}
 				sel.Pos--
 			}
 		}
+	} else {
+		return "0", 0, false, false
 	}
 	retstr, i, flag := sel.readStringAcii()
-	return retstr, i, flag
+	return retstr, i, flag, true
 }
 
-func (sel *streamdecoder) readbyteVectorOptional() ([]byte, int, bool) {
-	rlen, i, flag := sel.readuint64Optional()
-	if !flag || rlen == 0 {
-		return []byte{}, i, flag
+func (sel *streamdecoder) readbyteVectorOptional() ([]byte, int, bool, bool) {
+	rlen, i, flag, flag2 := sel.readuint64Optional()
+	if !flag || !flag2 || rlen == 0 {
+		return []byte{}, i, flag, flag2
 	}
 
 	rdata := sel.data[sel.Pos : sel.Pos+int(rlen)]
 	sel.Pos += int(rlen)
-	return rdata, i + int(rlen), true
+	return rdata, i + int(rlen), true, true
 }
 
 func (sel *streamdecoder) readbyteVector() ([]byte, int, bool) {

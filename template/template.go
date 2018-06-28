@@ -1,4 +1,5 @@
 // hello
+
 package template
 
 import (
@@ -84,7 +85,7 @@ func tooptype(strtype string) int {
 type templete struct {
 	XMLName xml.Name    `xml:"template"`
 	Name    string      `xml:"name,attr"`
-	Id      int         `xml:"id,attr"`
+	Id      uint        `xml:"id,attr"`
 	Fields  []tempfield `xml:",any"`
 }
 
@@ -131,13 +132,13 @@ type Field struct {
 }
 
 type Message struct {
-	Msgid   int
+	Msgid   uint
 	Msgname string
 	Fields  []Field
 }
 
 type Msgset struct {
-	Msgitems map[int]Message
+	Msgitems map[uint]Message
 }
 
 func parseElement(token xml.Token) bool {
@@ -230,7 +231,7 @@ func (sel *Msgset) ParseTemplate(filename string) bool {
 	}
 	//	fmt.Println(result)
 
-	sel.Msgitems = make(map[int]Message)
+	sel.Msgitems = make(map[uint]Message)
 	for _, tem := range result.Templetes {
 		//		fmt.Println(k, tem.XMLName.Local, tem.Name, tem.Id)
 		msg := Message{Msgid: tem.Id, Msgname: tem.Name}

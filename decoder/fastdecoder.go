@@ -21,7 +21,7 @@ func read(field *template.Field, decod *streamdecoder, isoption bool) (interface
 	if field.Datatype == template.Type_int32 {
 		if isoption {
 			// fmt.Println
-			ret, _, flag := decod.readintOptional()
+			ret, _, flag, _ := decod.readintOptional()
 			return ret, flag
 		}
 		// fmt.Println
@@ -31,7 +31,7 @@ func read(field *template.Field, decod *streamdecoder, isoption bool) (interface
 	} else if field.Datatype == template.Type_uint32 {
 		if isoption {
 			// fmt.Println
-			ret, _, flag := decod.readuintOptional()
+			ret, _, flag, _ := decod.readuintOptional()
 			return ret, flag
 		}
 		// fmt.Println
@@ -40,7 +40,7 @@ func read(field *template.Field, decod *streamdecoder, isoption bool) (interface
 	} else if field.Datatype == template.Type_length {
 		if isoption {
 			// fmt.Println
-			ret, _, flag := (decod.readuintOptional())
+			ret, _, flag, _ := (decod.readuintOptional())
 			return ret, flag
 		}
 		// fmt.Println
@@ -49,7 +49,7 @@ func read(field *template.Field, decod *streamdecoder, isoption bool) (interface
 	} else if field.Datatype == template.Type_uint64 {
 		if isoption {
 			// fmt.Println
-			ret, _, flag := (decod.readuint64Optional())
+			ret, _, flag, _ := (decod.readuint64Optional())
 			return ret, flag
 		}
 		// fmt.Println
@@ -58,7 +58,7 @@ func read(field *template.Field, decod *streamdecoder, isoption bool) (interface
 	} else if field.Datatype == template.Type_int64 {
 		if isoption {
 			// fmt.Println
-			ret, _, flag := (decod.readint64Optional())
+			ret, _, flag, _ := (decod.readint64Optional())
 			return ret, flag
 		}
 		// fmt.Println
@@ -67,7 +67,7 @@ func read(field *template.Field, decod *streamdecoder, isoption bool) (interface
 	} else if field.Datatype == template.Type_acsii {
 		if isoption {
 			// fmt.Println
-			ret, _, flag := (decod.readAtringAciiOptional())
+			ret, _, flag, _ := (decod.readAtringAciiOptional())
 			return ret, flag
 		}
 		// fmt.Println
@@ -75,16 +75,16 @@ func read(field *template.Field, decod *streamdecoder, isoption bool) (interface
 		return ret, flag
 	} else if field.Datatype == template.Type_decimal {
 		if isoption {
-			exponent, mantissa, flag := decod.readdecimalOptional()
-			return "(" + string(exponent) + "," + string(mantissa) + ")", flag
+			exponent, mantissa, flag, _ := decod.readdecimalOptional()
+			return "(" + strconv.Itoa(int(exponent)) + "," + strconv.Itoa(int(mantissa)) + ")", flag
 			// fmt.Println(exponent, mantissa, flag)
 		}
 		exponent, mantissa, flag := decod.readdecimal()
-		return "(" + string(exponent) + "," + string(mantissa) + ")", flag
+		return "(" + strconv.Itoa(int(exponent)) + "," + strconv.Itoa(int(mantissa)) + ")", flag
 		// fmt.Println(exponent, mantissa, i)
 	} else if field.Datatype == template.Type_byteVector {
 		if isoption {
-			ret, _, flag := (decod.readbyteVectorOptional())
+			ret, _, flag, _ := (decod.readbyteVectorOptional())
 			return ret, flag
 		}
 
@@ -112,7 +112,7 @@ func (sel *fastdecoder) readsequence(fieldseq *template.Field, decod *streamdeco
 			tmpvalue := uint(0)
 			flag := false
 			if fieldseq.Seqlen_item.Option {
-				tmpvalue, _, flag = decod.readuintOptional()
+				tmpvalue, _, flag, _ = decod.readuintOptional()
 			} else {
 				tmpvalue, _, flag = decod.readuint()
 			}
@@ -127,7 +127,7 @@ func (sel *fastdecoder) readsequence(fieldseq *template.Field, decod *streamdeco
 		tmpvalue := uint(0)
 		flag := false
 		if fieldseq.Seqlen_item.Option {
-			tmpvalue, _, flag = decod.readuintOptional()
+			tmpvalue, _, flag, _ = decod.readuintOptional()
 		} else {
 			tmpvalue, _, flag = decod.readuint()
 		}
@@ -144,7 +144,7 @@ func (sel *fastdecoder) readsequence(fieldseq *template.Field, decod *streamdeco
 }
 
 func (sel *fastdecoder) decodermsg(decord *streamdecoder) bool {
-	fmt.Println("msgid = ", sel.curmsgid)
+	// fmt.Println("msgid = ", sel.curmsgid)
 	curmessage, bfind := sel.msgs.Msgitems[sel.curmsgid]
 	if !bfind {
 		fmt.Println("data can not parse,unknown msgid", sel.curmsgid)
@@ -179,6 +179,8 @@ func (sel *fastdecoder) decodermsg(decord *streamdecoder) bool {
 				if !flag {
 					return false
 				}
+				// fmt.Println("Id1|value:", field.Id, value)
+
 			}
 		} else if field.Op == template.Op_no || field.Op == template.Op_delta {
 			if field.Datatype == template.Type_else {
@@ -196,6 +198,7 @@ func (sel *fastdecoder) decodermsg(decord *streamdecoder) bool {
 				if !flag {
 					return false
 				}
+				// fmt.Println("Id2|value:", field.Id, value)
 			}
 		}
 	}
