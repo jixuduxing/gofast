@@ -168,15 +168,16 @@ func (sel *fastdecoder) decodermsg(decord *streamdecoder) bool {
 				continue
 			}
 			sel.seq++
-			//			fmt.Println("ID|seq:", field.Id, sel.seq)
 			if field.Datatype == template.Type_sequence {
 				flag := sel.readsequence(field, decord)
 				if !flag {
+					fmt.Println("readsequence error", field.Name)
 					return false
 				}
 			} else {
 				_, flag := read(field, decord, field.Option)
 				if !flag {
+					fmt.Println("read error", field.Name, field.Id)
 					return false
 				}
 				// fmt.Println("Id1|value:", field.Id, value)
@@ -187,15 +188,16 @@ func (sel *fastdecoder) decodermsg(decord *streamdecoder) bool {
 				fmt.Println("decoderdata fail for field2:", field.Id, field.Seq)
 				return false
 			}
-			//			fmt.Println("data2 ID:", field.Id)
 			if field.Datatype == template.Type_sequence {
 				flag := sel.readsequence(field, decord)
 				if !flag {
+					fmt.Println("readsequence error", field.Name)
 					return false
 				}
 			} else {
 				_, flag := read(field, decord, field.Option)
 				if !flag {
+					fmt.Println("read error", field.Name, field.Id)
 					return false
 				}
 				// fmt.Println("Id2|value:", field.Id, value)

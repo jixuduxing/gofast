@@ -56,7 +56,6 @@ func (sel *sequencedecoder) readsequence(fieldseq *template.Field, decod *stream
 			return false
 		}
 		sequencelen = int(tmpvalue)
-		//		sequencelen,_ =sel.read(fieldseq.Seqlen_item,decod, fieldseq.Seqlen_item.Option)
 	}
 	sequncedecod := sequencedecoder{}
 	fieldseq.Seqlen_item.Prevalue = strconv.Itoa(sequencelen)
@@ -79,7 +78,6 @@ func (sel *sequencedecoder) decode(decod *streamdecoder, sequencelen int, fields
 		sel.seq = 0
 		for idx := range fieldseq.Items {
 			field := &fieldseq.Items[idx]
-			//			fmt.Println(field.Id, field.Needplace(), field.Seq)
 			if field.Needplace() {
 				if field.Datatype == template.Type_else {
 					fmt.Println("decoderdata fail for field:1", "test", field.Id, field.Seq)
@@ -90,15 +88,16 @@ func (sel *sequencedecoder) decode(decod *streamdecoder, sequencelen int, fields
 					continue
 				}
 				sel.seq++
-				//				fmt.Println("id|seq", field.Id, sel.seq)
 				if field.Datatype == template.Type_sequence {
 					flag := sel.readsequence(field, decod)
 					if !flag {
+						fmt.Println("readsequence error", field.Name)
 						return false
 					}
 				} else {
 					_, flag := read(field, decod, field.Option)
 					if !flag {
+						fmt.Println("read error", field.Name, field.Id)
 						return false
 					}
 					// fmt.Println("Id3|value:", field.Id, value)
@@ -109,15 +108,16 @@ func (sel *sequencedecoder) decode(decod *streamdecoder, sequencelen int, fields
 					fmt.Println("decoderdata fail for field2:", field.Id, field.Seq)
 					return false
 				}
-				//				fmt.Println("data1 ID:", field.Id)
 				if field.Datatype == template.Type_sequence {
 					flag := sel.readsequence(field, decod)
 					if !flag {
+						fmt.Println("readsequence error", field.Name)
 						return false
 					}
 				} else {
 					_, flag := read(field, decod, field.Option)
 					if !flag {
+						fmt.Println("read error", field.Name, field.Id)
 						return false
 					}
 					// fmt.Println("Id4|value:", field.Id, value)

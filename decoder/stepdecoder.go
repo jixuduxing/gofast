@@ -145,7 +145,9 @@ func (sel Stepdecoder) decodebody(data []byte) int {
 					break
 				}
 				fastdecod := fastdecoder{msgs: sel.Msgs}
-				fastdecod.decodedata(data[pos : pos+rawdatasize])
+				if !fastdecod.decodedata(data[pos : pos+rawdatasize]) {
+					fmt.Println("fastdecod.decodedata fail")
+				}
 				break
 
 			} else {
