@@ -294,7 +294,7 @@ func (sel *streamdecoder) readAtringAciiOptional() (string, int, bool, bool) {
 		ch := sel.data[sel.Pos]
 		if ch == stopbit {
 			sel.Pos++
-			return "", 0, false, false //FC_NULL_VALUE
+			return "", 0, true, false //FC_NULL_VALUE
 		} else if ch == 0 {
 			sel.Pos++
 			if sel.Pos < len(sel.data) {
@@ -304,6 +304,8 @@ func (sel *streamdecoder) readAtringAciiOptional() (string, int, bool, bool) {
 					return "", 0, true, true // #FC_EMPTY_VALUE
 				}
 				sel.Pos--
+			} else {
+				return "0", 0, false, false
 			}
 		}
 	} else {
