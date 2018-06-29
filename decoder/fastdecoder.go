@@ -16,7 +16,12 @@ type fastdecoder struct {
 	pmap     []byte
 	seq      int
 }
+type decimal struct {
+	mantissa int64
+	exponent int
+}
 
+//return value,readsuccess
 func read(field *template.Field, decod *streamdecoder, isoption bool) (interface{}, bool) {
 	if field.Datatype == template.Type_int32 {
 		if isoption {
@@ -75,12 +80,12 @@ func read(field *template.Field, decod *streamdecoder, isoption bool) (interface
 		return ret, flag
 	} else if field.Datatype == template.Type_decimal {
 		if isoption {
-			exponent, mantissa, flag, _ := decod.readdecimalOptional()
-			return "(" + strconv.Itoa(int(exponent)) + "," + strconv.Itoa(int(mantissa)) + ")", flag
+			mantissa, exponent, flag, _ := decod.readdecimalOptional()
+			return decimal{mantissa: mantissa, exponent: exponent}, flag
 			// fmt.Println(exponent, mantissa, flag)
 		}
-		exponent, mantissa, flag := decod.readdecimal()
-		return "(" + strconv.Itoa(int(exponent)) + "," + strconv.Itoa(int(mantissa)) + ")", flag
+		mantissa, exponent, flag := decod.readdecimal()
+		return decimal{mantissa: mantissa, exponent: exponent}, flag
 		// fmt.Println(exponent, mantissa, i)
 	} else if field.Datatype == template.Type_byteVector {
 		if isoption {

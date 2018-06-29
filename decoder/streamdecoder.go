@@ -57,7 +57,7 @@ func (sel *streamdecoder) readint() (int, int, bool) {
 				}
 			} else if i == 4 {
 				if firstch&signbit > 0 {
-					if (firstch&databits)>>4 != 1 {
+					if (firstch&databits)>>4 != 7 {
 						return 0, 0, false //over flow
 					}
 				} else if (firstch&databits)>>4 != 0 {
@@ -295,7 +295,7 @@ func (sel *streamdecoder) readint64() (int64, int, bool) {
 				}
 			} else if i == 9 {
 				if firstch&signbit > 0 {
-					if (firstch&databits)>>4 != 1 {
+					if (firstch&databits)>>4 != 7 {
 						return 0, 0, false //over flow
 					}
 				} else if (firstch&databits)>>4 != 0 {
